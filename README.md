@@ -1,0 +1,2 @@
+# 454Final_Project
+ Implement a program to convert a given regular expression to an �-free NFA. (First convert the regular expression to a NFA, then remove �-moves.) Write a main function that takes as input a regular expression R (in the standard format used, e.g., in the text) and outputs the �- free NFA. Next it takes as input a string w (over the alphabet of R) and returns true (false) if w is in L(R). You can use the algorithm you implemented in Project 2 for this step.
