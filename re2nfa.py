@@ -11,10 +11,13 @@ class NFA(object):
         temp = []
         temp2 = []
         for i in range(len(m)):
-            if m[i][0] == char:
-                temp.append(1)
+            if char in m:
+                if m[char] == i:
+                    temp.append(1)
+                else:
+                    temp.append(None)
             else:
-                temp.append(None)
+                exit(2)
             temp2.append(None)
         self.deltaArray.append(temp)
         self.deltaArray.append(temp2)
@@ -41,24 +44,64 @@ class NFA(object):
                 else:
                     temp.append(None)
             newNFA.deltaArray.append(temp)
-            newNFA.EArray.append(otherNFA.EArray[i])
+
+        C = len(otherNFA.EArray)
+        for i in range(C):
+            epsilons = []
+            for k in range(len(otherNFA.EArray[i])):
+                epsilons.append(otherNFA.EArray[i][k] + A)
+            newNFA.EArray.append(epsilons)
+
         self.deltaArray = newNFA.deltaArray
         self.EArray = newNFA.EArray
-        self.accept = A+B
+        self.accept = A+B - 1
 
     def star(self):
+        tempNFA = NFA()
+        temp = []
+        for i in range(len(self.deltaArray[0])):
+            temp.append(None)
+        tempNFA.deltaArray.append(temp)
+        A = len(self.deltaArray)
+        tempNFA.EArray.append([1, A+1])
+        for i in range(A):
+            trans = []
+            for k in range(len(self.deltaArray[i])):
+                if self.deltaArray[i][k] is not None:
+                    trans.append(self.deltaArray[i][k] + 1)
+                else:
+                    trans.append(None)
+            tempNFA.deltaArray.append(trans)
+        B = len(self.EArray)
+        for i in range(B-1):
+            epsilons = []
+            for k in range(len(self.EArray[i])):
+                epsilons.append(self.EArray[i][k] + 1)
+            tempNFA.EArray.append(epsilons)
+        tempNFA.EArray.append([1, A+1])
+        tempNFA.EArray.append([])
+        tempNFA.deltaArray.append(temp)
+
+        self.deltaArray = tempNFA.deltaArray
+        self.EArray = tempNFA.EArray
+        self.accept = A + 1
+
+
         return
 
 
 def main():
 
-    m = [['0', 0], ['1', 1]]
+    m = {'0': 0, '1': 1}
     nfa1 = NFA()
     nfa1.baseNFA('1', m)
 
     nfa2 = NFA()
     nfa2.baseNFA('0', m)
+
     nfa1.concatenate(nfa2)
+
+    nfa1.star()
 
     return 0
 
