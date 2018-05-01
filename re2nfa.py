@@ -23,6 +23,54 @@ class NFA(object):
         self.deltaArray.append(temp2)
 
     def union(self, otherNFA):
+        tempNFA = NFA()
+        temp = []
+        for i in range(len(self.deltaArray[0])):
+            temp.append(None)
+        tempNFA.deltaArray.append(temp)
+
+        A = len(self.deltaArray)
+        tempNFA.EArray.append([1, A + 1])
+        for i in range(A):
+            trans = []
+            for k in range(len(self.deltaArray[i])):
+                if self.deltaArray[i][k] is not None:
+                    trans.append(self.deltaArray[i][k] + 1)
+                else:
+                    trans.append(None)
+            tempNFA.deltaArray.append(trans)
+        B = len(self.EArray)
+        for i in range(B - 1):
+            epsilons = []
+            for k in range(len(self.EArray[i])):
+                epsilons.append(self.EArray[i][k] + 1)
+            tempNFA.EArray.append(epsilons)
+
+        C = len(otherNFA.deltaArray)
+        tempNFA.EArray.append([A + C + 1])
+        for i in range(C):
+            trans = []
+            for k in range(len(otherNFA.deltaArray[i])):
+                if otherNFA.deltaArray[i][k] is not None:
+                    trans.append(otherNFA.deltaArray[i][k] + A)
+                else:
+                    trans.append(None)
+            tempNFA.deltaArray.append(trans)
+        D = len(otherNFA.EArray)
+        for i in range(D - 1):
+            epsilons = []
+            for k in range(len(otherNFA.EArray[i])):
+                epsilons.append(otherNFA.EArray[i][k] + A)
+            tempNFA.EArray.append(epsilons)
+
+        tempNFA.EArray.append([A + B + 1])
+        tempNFA.EArray.append([])
+        tempNFA.deltaArray.append(temp)
+
+        self.deltaArray = tempNFA.deltaArray
+        self.EArray = tempNFA.EArray
+        self.accept = A + B + 1
+
         return
 
     def concatenate(self, otherNFA):
@@ -85,9 +133,31 @@ class NFA(object):
         self.deltaArray = tempNFA.deltaArray
         self.EArray = tempNFA.EArray
         self.accept = A + 1
+        
+        return
 
+    def removeEpsilon(self):
+        # work in progress, overwrite whole transition []
+        queue = []
+        A = len(self.EArray)
+        for i in range(A):
+            if not len(self.EArray[i]) == 0:
+                for k in range(len(self.EArray[i])):
+                    queue.append([i, self.EArray[i][k]])
+        newDelta = list(self.deltaArray)  # copy
+        while len(queue) > 0:
+            state = queue[0][0]
+            eTran = queue[0][1]
+            numE = len(self.EArray[eTran])
+            if numE > 0:
+                for i in range(len(self.EArray[eTran])):
+                    queue.append([state, self.EArray[eTran][i]])
+            elif not eTran == self.accept:
+                newDelta[state] = self.deltaArray[eTran]
+            queue.pop(0)
 
         return
+
 
 
 def main():
@@ -99,9 +169,14 @@ def main():
     nfa2 = NFA()
     nfa2.baseNFA('0', m)
 
-    nfa1.concatenate(nfa2)
+    nfa1.union(nfa2)
 
-    nfa1.star()
+    #nfa1.concatenate(nfa2)
+
+    #nfa1.star()
+    #nfa1.concatenate(nfa2)
+
+   # nfa1.removeEpsilon()
 
     return 0
 
