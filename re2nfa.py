@@ -3,11 +3,10 @@ from collections import OrderedDict
 
 def main():
 
-
-
         #RE = 'C(Z) B 2 A 344'
-        RE = input("Type a regular expression: ")
-        
+        #RE = input("Type a regular expression: ")
+        RE = 'AB'
+
 
         # Regular Expression Parser Loop
         transitionDict = {}
