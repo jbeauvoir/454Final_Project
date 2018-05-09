@@ -52,7 +52,7 @@ class NFA(object):
             trans = []
             for k in range(len(otherNFA.deltaArray[i])):
                 if otherNFA.deltaArray[i][k] is not None:
-                    trans.append(otherNFA.deltaArray[i][k] + A)
+                    trans.append(otherNFA.deltaArray[i][k] + A + 1)
                 else:
                     trans.append(None)
             tempNFA.deltaArray.append(trans)
@@ -60,11 +60,14 @@ class NFA(object):
         for i in range(D - 1):
             epsilons = []
             for k in range(len(otherNFA.EArray[i])):
-                epsilons.append(otherNFA.EArray[i][k] + A)
+                epsilons.append(otherNFA.EArray[i][k] + A + 1)
             tempNFA.EArray.append(epsilons)
 
-        tempNFA.EArray.append([A + B + 1])
+        tempNFA.EArray.append([A + C + 1])
         tempNFA.EArray.append([])
+        temp = []
+        for i in range(len(self.deltaArray[0])):
+            temp.append(None)
         tempNFA.deltaArray.append(temp)
 
         self.deltaArray = tempNFA.deltaArray
@@ -88,7 +91,7 @@ class NFA(object):
             temp = []
             for k in range(len(otherNFA.deltaArray[i])):
                 if otherNFA.deltaArray[i][k] is not None:
-                    temp.append(otherNFA.deltaArray[i][k]+A)
+                    temp.append(otherNFA.deltaArray[i][k] + A)
                 else:
                     temp.append(None)
             newNFA.deltaArray.append(temp)
@@ -128,55 +131,174 @@ class NFA(object):
             tempNFA.EArray.append(epsilons)
         tempNFA.EArray.append([1, A+1])
         tempNFA.EArray.append([])
-        tempNFA.deltaArray.append(temp)
+        temp2 = list(temp)
+        tempNFA.deltaArray.append(temp2)
 
         self.deltaArray = tempNFA.deltaArray
         self.EArray = tempNFA.EArray
         self.accept = A + 1
-        
+
         return
 
     def removeEpsilon(self):
         # work in progress, overwrite whole transition []
         queue = []
         A = len(self.EArray)
-        for i in range(A):
+        i = 0
+        while len(queue) == 0:
             if not len(self.EArray[i]) == 0:
                 for k in range(len(self.EArray[i])):
                     queue.append([i, self.EArray[i][k]])
-        newDelta = list(self.deltaArray)  # copy
-        while len(queue) > 0:
-            state = queue[0][0]
-            eTran = queue[0][1]
-            numE = len(self.EArray[eTran])
-            if numE > 0:
-                for i in range(len(self.EArray[eTran])):
-                    queue.append([state, self.EArray[eTran][i]])
-            elif not eTran == self.accept:
-                newDelta[state] = self.deltaArray[eTran]
-            queue.pop(0)
+            i = i + 1
+        visitedBase = []
+        for i in range(len(self.deltaArray)):
+            visitedBase.append(False)
 
+        acceptList = []
+        addTrans = self.findTransitions(queue, visitedBase, acceptList)
+        reachedStates = self.addTransitions(addTrans)
+
+        finalVisit = visitedBase[:]
+        while len(reachedStates) > 0:
+            if finalVisit[reachedStates[0]]:
+                reachedStates.pop(0)
+            else:
+                i = 0
+                while len(queue) == 0:
+                    s = reachedStates[i]
+                    if not len(self.EArray[s]) == 0:
+                        for k in range(len(self.EArray[s])):
+                            queue.append([s, self.EArray[s][k]])
+                    i = i + 1
+                    reachedStates.pop(0)
+                addTrans = self.findTransitions(queue, visitedBase, acceptList)
+                reachedStates = reachedStates + self.addTransitions(addTrans)
+                finalVisit[s] = True
+        self.EArray = []
+        self.accept = acceptList
         return
 
+    def findTransitions(self, queue, visitedBase, acceptList):
+        visited = visitedBase[:]
+        addTrans = []
+        state = queue[0][0]
+        visited[state] = True
+        while len(queue) > 0:
+            eTran = queue[0][1]
+            numE = len(self.EArray[eTran])
+            if visited[eTran]:
+                queue.pop(0)
+            elif numE > 0:
+                for i in range(len(self.EArray[eTran])):
+                    epsilonTrans = [state, self.EArray[eTran][i]]
+                    queue.append(epsilonTrans)
+                queue.pop(0)
+            elif eTran == self.accept:
+                acceptList.append(state)
+                queue.pop(0)
+            else:
+                addTrans.append(queue.pop(0))
+            visited[eTran] = True
+        return addTrans
 
+    def addTransitions(self, addTrans):
+        newDelta = self.deltaArray
+        reachedStates = []
+        while len(addTrans) > 0:
+            state = addTrans[0][0]
+            eTran = addTrans[0][1]
+            for i in range(len(self.deltaArray[eTran])):
+                if newDelta[state][i] is not None and self.deltaArray[eTran][i] is not None:
+                    if isinstance(newDelta[state][i], int):
+                        temp = [newDelta[state][i], self.deltaArray[eTran][i]]
+                        newDelta[state][i] = temp
+                    else:
+                        newDelta[state][i].append(self.deltaArray[eTran][i])
+                    reachedStates.append(self.deltaArray[eTran][i])
+                elif self.deltaArray[eTran][i] is not None:
+                    newDelta[state][i] = self.deltaArray[eTran][i]
+                    reachedStates.append(self.deltaArray[eTran][i])
+
+            addTrans.pop(0)
+        return reachedStates
+
+def testString(nonE_NFA, str, map):
+    states = [0]
+    for i in str:
+        if i in map:
+            transition = map[i]
+        else:
+            return False
+        numStates = len(states)
+        for j in range(numStates):
+            if states[j] != -1:
+                if isinstance(nonE_NFA.deltaArray[states[j]][transition], int):
+                    states[j] = nonE_NFA.deltaArray[states[j]][transition]
+                elif nonE_NFA.deltaArray[states[j]][transition] is not None:
+                    states[j] = nonE_NFA.deltaArray[states[j]][transition][0]
+                    numTrans = len(nonE_NFA.deltaArray[states[j]][transition])
+                    for k in range(1, numTrans):
+                        state = nonE_NFA.deltaArray[states[j]][transition][k]
+                        states.append(state)
+                else:
+                    states[j] = -1
+    for i in states:
+        for j in nonE_NFA.accept:
+            if i == j:
+                return True
+
+
+def createNFAmulitpleOf3():
+    m = {'0': 0, '1': 1}
+    bNFA = NFA()
+    bNFA.baseNFA('0', m)
+
+    temp = NFA()
+    temp.baseNFA('0', m)
+
+    bNFA.union(temp)
+    bNFA.star()
+
+    temp = NFA()
+    temp.baseNFA('0',m)
+    temp2 = NFA()
+    temp2.baseNFA('1',m)
+    temp2.star()
+    temp.concatenate(temp2)
+    temp.concatenate(bNFA)
+    bNFA = NFA()
+    bNFA.baseNFA('0', m)
+    temp.concatenate(bNFA)
+    temp.star()
+
+    bNFA = NFA()
+    bNFA.baseNFA('1', m)
+    bNFA.concatenate(temp)
+    temp = NFA()
+    temp.baseNFA('1', m)
+    bNFA.concatenate(temp)
+    bNFA.star()
+
+    finalNFA = NFA()
+    finalNFA.baseNFA('0', m)
+    finalNFA.union(bNFA)
+    finalNFA.star()
+
+    return finalNFA
 
 def main():
 
     m = {'0': 0, '1': 1}
-    nfa1 = NFA()
-    nfa1.baseNFA('1', m)
 
-    nfa2 = NFA()
-    nfa2.baseNFA('0', m)
+    multi3NFA = createNFAmulitpleOf3()
+    multi3NFA.removeEpsilon()
 
-    nfa1.union(nfa2)
+    testStr = input("Enter string to test:")
 
-    #nfa1.concatenate(nfa2)
-
-    #nfa1.star()
-    #nfa1.concatenate(nfa2)
-
-   # nfa1.removeEpsilon()
+    if testString(multi3NFA, testStr, m):
+        print("This string is accepted")
+    else:
+        print("This string is rejected")
 
     return 0
 
