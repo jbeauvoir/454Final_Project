@@ -174,6 +174,7 @@ class NFA(object):
                 addTrans = self.findTransitions(queue, visitedBase, acceptList)
                 reachedStates = reachedStates + self.addTransitions(addTrans)
                 finalVisit[s] = True
+        acceptList.append(self.accept)
         self.EArray = []
         self.accept = acceptList
         return
@@ -318,6 +319,8 @@ def readInput(str, i):
                 if str[i] == '*':
                     tempNFA.star()
             startNFA.union(tempNFA)
+            if str[i - 1] == ')':
+                return startNFA, i
         elif str[i] == ')':
             return startNFA, (i+1)
         else:
@@ -347,7 +350,6 @@ def main():
         print("This string is accepted")
     else:
         print("This string is rejected")
-
 
     return 0
 
