@@ -17,7 +17,7 @@ class NFA(object):
                 else:
                     temp.append(None)
             else:
-                exit(2)
+                exit(3)
             temp2.append(None)
         self.deltaArray.append(temp)
         self.deltaArray.append(temp2)
@@ -222,6 +222,7 @@ class NFA(object):
             addTrans.pop(0)
         return reachedStates
 
+
 def testString(nonE_NFA, str, map):
     states = [0]
     for i in str:
@@ -235,10 +236,11 @@ def testString(nonE_NFA, str, map):
                 if isinstance(nonE_NFA.deltaArray[states[j]][transition], int):
                     states[j] = nonE_NFA.deltaArray[states[j]][transition]
                 elif nonE_NFA.deltaArray[states[j]][transition] is not None:
-                    states[j] = nonE_NFA.deltaArray[states[j]][transition][0]
                     numTrans = len(nonE_NFA.deltaArray[states[j]][transition])
+                    temp = nonE_NFA.deltaArray[states[j]][transition]
+                    states[j] = temp[0]
                     for k in range(1, numTrans):
-                        state = nonE_NFA.deltaArray[states[j]][transition][k]
+                        state = temp[k]
                         states.append(state)
                 else:
                     states[j] = -1
@@ -286,19 +288,66 @@ def createNFAmulitpleOf3():
 
     return finalNFA
 
-def main():
 
+def readInput(str, i):
     m = {'0': 0, '1': 1}
+    if str[i] == '(' and i != 0:
+        return readInput(str, i+1)
+    elif str[i] == '+' or str[i] == ')':
+        exit(2)
+    elif str[i] != '(':
+        startNFA = NFA()
+        startNFA.baseNFA(str[i], m)
+        i = i + 1
+    else:
+        startNFA, i = readInput(str, i+1)
+        if i < len(str):
+            if str[i] == '*':
+                startNFA.star()
+                i = i + 1
+    while i < len(str):
+        if str[i] == '(':
+            tempNFA, i = readInput(str, i+1)
+            if i < len(str):
+                if str[i] == '*':
+                    tempNFA.star()
+            startNFA.concatenate(tempNFA)
+        elif str[i] == '+':
+            tempNFA, i = readInput(str, i+1)
+            if i < len(str):
+                if str[i] == '*':
+                    tempNFA.star()
+            startNFA.union(tempNFA)
+        elif str[i] == ')':
+            return startNFA, (i+1)
+        else:
+            tempNFA = NFA()
+            tempNFA.baseNFA(str[i], m)
+            if i+1 < len(str):
+                if str[i+1] == '*':
+                    tempNFA.star()
+                    i = i + 1
+            startNFA.concatenate(tempNFA)
+        i = i + 1
+    return startNFA, i
 
+
+def main():
+    m = {'0': 0, '1': 1}
     multi3NFA = createNFAmulitpleOf3()
     multi3NFA.removeEpsilon()
 
+    regEx = input("Enter a regular expression: ")
+    myNFA, i = readInput(regEx, 0)
+    myNFA.removeEpsilon()
+
     testStr = input("Enter string to test:")
 
-    if testString(multi3NFA, testStr, m):
+    if testString(myNFA, testStr, m):
         print("This string is accepted")
     else:
         print("This string is rejected")
+
 
     return 0
 
