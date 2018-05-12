@@ -328,10 +328,9 @@ def createNFAmulitpleOf3():
     return finalNFA
 
 
-def readInput(str, i):
-    m = {'0': 0, '1': 1}
+def readInput(str, i, m):
     if str[i] == '(' and i != 0:
-        return readInput(str, i+1)
+        return readInput(str, i+1, m)
     elif str[i] == '+' or str[i] == ')':
         exit(2)
     elif str[i] != '(':
@@ -343,20 +342,20 @@ def readInput(str, i):
                 startNFA.star()
                 i = i + 1
     else:
-        startNFA, i = readInput(str, i+1)
+        startNFA, i = readInput(str, i+1, m)
         if i < len(str):
             if str[i] == '*':
                 startNFA.star()
                 i = i + 1
     while i < len(str):
         if str[i] == '(':
-            tempNFA, i = readInput(str, i+1)
+            tempNFA, i = readInput(str, i+1, m)
             if i < len(str):
                 if str[i] == '*':
                     tempNFA.star()
             startNFA.concatenate(tempNFA)
         elif str[i] == '+':
-            tempNFA, i = readInput(str, i+1)
+            tempNFA, i = readInput(str, i+1, m)
             startNFA.union(tempNFA)
             if str[i - 1] == ')':
                 return startNFA, i
@@ -379,17 +378,34 @@ def main():
     multi3NFA = createNFAmulitpleOf3()
     multi3NFA.removeEpsilon()
 
-    regEx = input("Enter a regular expression: ")
-    myNFA, i = readInput(regEx, 0)
-    myNFA.removeEpsilon()
+    loop = True
+    while loop:
+        end = False
+        regEx = input("Enter a regular expression or press \'q\' to exit: ")
+        if regEx == 'q':
+            loop = False
+            end = True
+        else:
+            myNFA, i = readInput(regEx, 0, m)
+            myNFA.removeEpsilon()
 
-    testStr = input("Enter string to test:")
+        while not end:
+            testStr = input("Enter string to test or press \'q\' to enter a new RE: ")
+            if testStr == 'q':
+                end = True
+            else:
+                if testString(myNFA, testStr, m):
+                    print("This string is accepted")
+                else:
+                    print("This string is rejected")
 
-    if testString(myNFA, testStr, m):
-        print("This string is accepted")
-    else:
-        print("This string is rejected")
+
+
+
+
+
 
     return 0
+
 
 main()
