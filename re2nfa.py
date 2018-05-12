@@ -194,6 +194,9 @@ class NFA(object):
         addTrans = self.findTransitions(queue, visitedBase, acceptList)
         reachedStates = self.addTransitions(addTrans)
 
+        # This is used to check if a state has already been visited and transitions have
+        # already been added. Is basically a list of True and False, with the index
+        # corresponding to the state in the NFA
         finalVisit = visitedBase[:]
         while len(reachedStates) > 0:
             if finalVisit[reachedStates[0]]:
@@ -218,6 +221,11 @@ class NFA(object):
         return
 
     def findTransitions(self, queue, visitedBase, acceptList):
+        # finds all states (that don't have epsilon) that can be reach by purely epsilon
+        # transitions from a give state.
+        # this will then return a list of pairs that consist of
+        # [given state, state that is reach by epsilon], this list is then passed to another
+        # function (addTransitions)
         visited = visitedBase[:]
         addTrans = []
         state = queue[0][0]
@@ -241,6 +249,7 @@ class NFA(object):
         return addTrans
 
     def addTransitions(self, addTrans):
+        # copies all transitions from from the state reached by epsilon to the given state
         newDelta = self.deltaArray
         reachedStates = []
         while len(addTrans) > 0:
