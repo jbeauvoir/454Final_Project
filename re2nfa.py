@@ -96,7 +96,7 @@ class NFA(object):
         # overwrite the first NFA with the NEW NFA created by the Union
         self.deltaArray = tempNFA.deltaArray
         self.EArray = tempNFA.EArray
-        self.accept = A + B + 1
+        self.accept = A + C + 1
 
         return
 
@@ -179,6 +179,10 @@ class NFA(object):
         # delta transitions. This uses the the rule of removing epsilons where
         # at state Q if there is a epsilon trans to a state U and there is a transition
         # from U to K, add that transition from Q to K and remove the epsilon.
+        if len(self.deltaArray) == 2:  # just in case RE is length one
+            self.EArray = []
+            self.accept = [self.accept]
+            return
         queue = []
         i = 0
         while len(queue) == 0:
@@ -298,45 +302,6 @@ def testString(nonE_NFA, inputStr, map):
                 return True
 
 
-def createNFAmulitpleOf3():
-    m = {'0': 0, '1': 1}
-    bNFA = NFA()
-    bNFA.baseNFA('0', m)
-
-    temp = NFA()
-    temp.baseNFA('0', m)
-
-    bNFA.union(temp)
-    bNFA.star()
-
-    temp = NFA()
-    temp.baseNFA('0',m)
-    temp2 = NFA()
-    temp2.baseNFA('1',m)
-    temp2.star()
-    temp.concatenate(temp2)
-    temp.concatenate(bNFA)
-    bNFA = NFA()
-    bNFA.baseNFA('0', m)
-    temp.concatenate(bNFA)
-    temp.star()
-
-    bNFA = NFA()
-    bNFA.baseNFA('1', m)
-    bNFA.concatenate(temp)
-    temp = NFA()
-    temp.baseNFA('1', m)
-    bNFA.concatenate(temp)
-    bNFA.star()
-
-    finalNFA = NFA()
-    finalNFA.baseNFA('0', m)
-    finalNFA.union(bNFA)
-    finalNFA.star()
-
-    return finalNFA
-
-
 def readInput(str, i, m):
     if str[i] == '(' and i != 0:
         return readInput(str, i+1, m)
@@ -395,9 +360,6 @@ def createMapping(inputStr):
 
 
 def main():
-
-    multi3NFA = createNFAmulitpleOf3()
-    multi3NFA.removeEpsilon()
 
     loop = True
     while loop:
