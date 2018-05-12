@@ -262,9 +262,9 @@ class NFA(object):
         return reachedStates
 
 
-def testString(nonE_NFA, str, map):
+def testString(nonE_NFA, inputStr, map):
     states = [0]
-    for i in str:
+    for i in inputStr:
         if i in map:
             transition = map[i]
         else:
@@ -373,8 +373,20 @@ def readInput(str, i, m):
     return startNFA, i
 
 
+def createMapping(inputStr):
+    m = {}
+    key = 0
+    for i in inputStr:
+        if i not in (' ', '(', ')', '*', '+'):
+            if i not in m:
+                temp = {i: key}
+                m.update(temp)
+                key = key + 1
+    return m
+
+
 def main():
-    m = {'0': 0, '1': 1}
+
     multi3NFA = createNFAmulitpleOf3()
     multi3NFA.removeEpsilon()
 
@@ -386,6 +398,7 @@ def main():
             loop = False
             end = True
         else:
+            m = createMapping(regEx)
             myNFA, i = readInput(regEx, 0, m)
             myNFA.removeEpsilon()
 
@@ -398,13 +411,6 @@ def main():
                     print("This string is accepted")
                 else:
                     print("This string is rejected")
-
-
-
-
-
-
-
     return 0
 
 
