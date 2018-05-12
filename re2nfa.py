@@ -1,3 +1,10 @@
+# Final Project CS 454
+# Converting Regular Expressions to an NFA then running a string to test if it is
+# a part of the language made by the RE
+
+# Group: Michael Schmidt, Catherine Meyer, Jacques Beauvoir
+
+
 class NFA(object):
     def __init__(self):
         self.start = 0
@@ -6,6 +13,7 @@ class NFA(object):
         self.EArray = []
 
     def baseNFA(self, char, m):
+        # builds a basic NFA with two states and one transition
         self.accept = 1
         self.EArray = [[], []]
         temp = []
@@ -23,12 +31,15 @@ class NFA(object):
         self.deltaArray.append(temp2)
 
     def union(self, otherNFA):
+        # takes two NFAs and takes the union of them and replace the caller NFA
         tempNFA = NFA()
         temp = []
         for i in range(len(self.deltaArray[0])):
             temp.append(None)
         tempNFA.deltaArray.append(temp)
 
+        # copy the first NFA into the temporary one, making sure to add one
+        # to all state transitions to compensate for the new stating state
         A = len(self.deltaArray)
         tempNFA.EArray.append([1, A + 1])
         for i in range(A):
@@ -39,6 +50,7 @@ class NFA(object):
                 else:
                     trans.append(None)
             tempNFA.deltaArray.append(trans)
+        # copy all epsilons
         B = len(self.EArray)
         for i in range(B - 1):
             epsilons = []
@@ -46,8 +58,13 @@ class NFA(object):
                 epsilons.append(self.EArray[i][k] + 1)
             tempNFA.EArray.append(epsilons)
 
+        # adds a transition for the NEW epsilon array from the last state added from the
+        # first NFA to the last state of this new NFA
         C = len(otherNFA.deltaArray)
         tempNFA.EArray.append([A + C + 1])
+
+        # copy the other NFA to the temp making sure to add to the old transitions
+        # the number of states in NFA1, plus an addition one. (This will be the new state)
         for i in range(C):
             trans = []
             for k in range(len(otherNFA.deltaArray[i])):
@@ -56,6 +73,8 @@ class NFA(object):
                 else:
                     trans.append(None)
             tempNFA.deltaArray.append(trans)
+
+        # copy epsilons
         D = len(otherNFA.EArray)
         for i in range(D - 1):
             epsilons = []
@@ -63,13 +82,18 @@ class NFA(object):
                 epsilons.append(otherNFA.EArray[i][k] + A + 1)
             tempNFA.EArray.append(epsilons)
 
+        # adds a transition for the NEW epsilon array from the last state added from the
+        # second NFA to the last state of this new NFA
         tempNFA.EArray.append([A + C + 1])
+
+        # set the last state to have no transitions on epsilon or delta
         tempNFA.EArray.append([])
         temp = []
         for i in range(len(self.deltaArray[0])):
             temp.append(None)
         tempNFA.deltaArray.append(temp)
 
+        # overwrite the first NFA with the NEW NFA created by the Union
         self.deltaArray = tempNFA.deltaArray
         self.EArray = tempNFA.EArray
         self.accept = A + B + 1
@@ -80,13 +104,18 @@ class NFA(object):
         newNFA = NFA()
         A = len(self.deltaArray)
         B = len(otherNFA.deltaArray)
+        # copy over the first NFA into tempNFA(newNFA)
         for i in range(A):
             newNFA.deltaArray.append(self.deltaArray[i])
             if i < A - 1:
                 newNFA.EArray.append(self.EArray[i])
             else:
                 newNFA.EArray.append(self.EArray[i])
+                # adds epsilon transition at old finish state of first NFA
                 newNFA.EArray[i].append(A)
+
+        # copy over the second NFA into tempNFA, adding the number of states in A to
+        # the transitions in B to keep transitions the same
         for i in range(B):
             temp = []
             for k in range(len(otherNFA.deltaArray[i])):
@@ -95,7 +124,7 @@ class NFA(object):
                 else:
                     temp.append(None)
             newNFA.deltaArray.append(temp)
-
+        # copy epsilon transitions
         C = len(otherNFA.EArray)
         for i in range(C):
             epsilons = []
@@ -113,7 +142,10 @@ class NFA(object):
         for i in range(len(self.deltaArray[0])):
             temp.append(None)
         tempNFA.deltaArray.append(temp)
+        # copy the NFA into the temporary one, making sure to add one
+        # to all state transitions to compensate for the new stating state
         A = len(self.deltaArray)
+        # adds epsilon trans to state 1, and final state from the starting state
         tempNFA.EArray.append([1, A+1])
         for i in range(A):
             trans = []
@@ -123,12 +155,14 @@ class NFA(object):
                 else:
                     trans.append(None)
             tempNFA.deltaArray.append(trans)
+        # copy over all epsilon trans
         B = len(self.EArray)
         for i in range(B-1):
             epsilons = []
             for k in range(len(self.EArray[i])):
                 epsilons.append(self.EArray[i][k] + 1)
             tempNFA.EArray.append(epsilons)
+        # add epsilon trans from old accepting state of the NFA to state 1 and new accepting state
         tempNFA.EArray.append([1, A+1])
         tempNFA.EArray.append([])
         temp2 = list(temp)
@@ -141,9 +175,11 @@ class NFA(object):
         return
 
     def removeEpsilon(self):
-        # work in progress, overwrite whole transition []
+        # removes all epsilon transitions from the NFA and replaces them with new
+        # delta transitions. This uses the the rule of removing epsilons where
+        # at state Q if there is a epsilon trans to a state U and there is a transition
+        # from U to K, add that transition from Q to K and remove the epsilon.
         queue = []
-        A = len(self.EArray)
         i = 0
         while len(queue) == 0:
             if not len(self.EArray[i]) == 0:
@@ -161,6 +197,8 @@ class NFA(object):
         finalVisit = visitedBase[:]
         while len(reachedStates) > 0:
             if finalVisit[reachedStates[0]]:
+                reachedStates.pop(0)
+            elif reachedStates[0] == self.accept:
                 reachedStates.pop(0)
             else:
                 i = 0
@@ -300,6 +338,10 @@ def readInput(str, i):
         startNFA = NFA()
         startNFA.baseNFA(str[i], m)
         i = i + 1
+        if i < len(str):
+            if str[i] == '*':
+                startNFA.star()
+                i = i + 1
     else:
         startNFA, i = readInput(str, i+1)
         if i < len(str):
@@ -315,9 +357,6 @@ def readInput(str, i):
             startNFA.concatenate(tempNFA)
         elif str[i] == '+':
             tempNFA, i = readInput(str, i+1)
-            if i < len(str):
-                if str[i] == '*':
-                    tempNFA.star()
             startNFA.union(tempNFA)
             if str[i - 1] == ')':
                 return startNFA, i
@@ -352,12 +391,5 @@ def main():
         print("This string is rejected")
 
     return 0
-
-
-
-
-
-
-
 
 main()
