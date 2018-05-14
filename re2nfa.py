@@ -7,6 +7,8 @@ sys.path
 import ply.lex as lex
 import ply.yacc as yacc
 
+global p
+
 class NFA(object):
     def __init__(self):
         self.start = 0
@@ -480,7 +482,7 @@ def dictCreator(RE):
 
 
 # Call parser (not in a function))
-parser = yacc.yacc()
+parser = yacc.yacc(method="LALR")
 
 
 # nfa creation will occur in the base case
