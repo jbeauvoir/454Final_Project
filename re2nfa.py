@@ -1,9 +1,8 @@
-from collections import OrderedDict
+import sys
+sys.path.append("/home/student/jbeauvoir/classes/cs454/p3/454Final_Project/ply")
 import ply.lex as lex
 import ply.yacc as yacc
-import sys
-
-
+from collections import OrderedDict
 
 class NFA(object):
     def __init__(self):
