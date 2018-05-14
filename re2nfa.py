@@ -1,5 +1,5 @@
 import sys
-sys.path.append("/home/student/jbeauvoir/classes/cs454/p3/454Final_Project/ply")
+sys.path
 import ply.lex as lex
 import ply.yacc as yacc
 from collections import OrderedDict
