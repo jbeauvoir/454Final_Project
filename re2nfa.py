@@ -4,6 +4,10 @@
 
 # Group: Michael Schmidt, Catherine Meyer, Jacques Beauvoir
 
+import sys
+sys.path
+import ply.lex as lex
+import ply.yacc as yacc
 
 class NFA(object):
     def __init__(self):
@@ -350,13 +354,189 @@ def readInput(str, i, m):
 def createMapping(inputStr):
     m = {}
     key = 0
-    for i in inputStr:
-        if i not in (' ', '(', ')', '*', '+'):
+    for i in str(inputStr):
+        if i not in (' ', '(', ')', '*', '+', '\'', ','):
             if i not in m:
                 temp = {i: key}
                 m.update(temp)
                 key = key + 1
     return m
+
+
+# List of tokens to be used
+tokens = [
+
+    'SYMBOL',
+    'L_PAREN',
+    'R_PAREN',
+    'UNION',
+    'KLEENE'
+
+]
+
+# t_ tells lexer what the token actually looks like
+# ordered in precedence
+
+t_L_PAREN = r'\('
+t_R_PAREN = r'\)'
+t_KLEENE = r'\*'
+t_UNION = r'\+'
+
+t_ignore = r' '
+
+
+# Dictates what a valid symbol can be,
+# which is any up/lower letter and digits
+# 0 to 9
+def t_SYMBOL(t):
+    r'[a-zA-Z0-9]'
+    t.type = 'SYMBOL'
+    return t
+
+
+def t_error(t):
+    print("Illegal character")
+    t.lexer.skip(1)
+
+
+# Create the Lexer
+lexer = lex.lex()
+
+'********************* PARSER **************************'
+
+# Sets up precedence
+precedence = (
+
+    ('left', 'UNION'),
+    ('left', 'KLEENE')
+)
+
+
+def p_regex(p):
+    '''
+    regex : expression
+          | empty
+    '''
+
+
+def p_expression_kleene(p):
+    '''
+    expression : expression KLEENE
+    '''
+    p[0] = (p[2], p[1])
+
+
+def p_expression_expression(p):
+    '''
+    expression : expression expression
+    '''
+    p[0] = (p[1], p[2])
+
+
+def p_LRparen(p):
+    '''
+    expression : L_PAREN expression R_PAREN
+    '''
+    p[0] = p[2]
+
+
+def p_expression_union_concat(p):
+    '''
+    expression : expression UNION expression
+
+    '''
+    p[0] = (p[2], p[1], p[3])
+
+
+def p_expression_symbol(p):
+    '''
+    expression : SYMBOL
+    '''
+    p[0] = p[1]
+
+
+def p_error(p):
+    print("Syntax error found!")
+
+
+def p_empty(p):
+    '''
+    empty :
+    '''
+    p[0] = None
+
+
+'******************************************************'
+
+
+# Call parser
+parser = yacc.yacc()
+
+
+# nfa creation will occur in the base case
+def run(p, nfa, m):
+    if type(p) == tuple:
+        # Union Check
+        if p[0] == '+':
+            lhs = run(p[1], nfa, m)
+            rhs = run(p[2], nfa, m)
+            lhsNFA = lhs[1]
+            rhsNFA = rhs[1]
+            lhsNFA.union(rhsNFA)
+            return (p, lhsNFA)
+        # Kleene Star Check
+        if p[0] == '*':
+            inString = run(p[1], nfa, m)
+            stringNFA = inString[1]
+            stringNFA.star()
+            return (p, stringNFA, m)
+        # Concatenation
+        else:
+            lhs = run(p[0], nfa, m)
+            rhs = run(p[1], nfa, m)
+            lhsNFA = lhs[1]
+            rhsNFA = rhs[1]
+            lhsNFA.concatenate(rhsNFA)
+            return (p, lhsNFA, m)
+    else:
+        tempNFA = NFA()
+        tempNFA.baseNFA(p, m)
+        return (p, tempNFA, m)
+    return (p, nfa, m)
+
+
+def Unfinishmain():
+
+    loop = True
+    while loop:
+        end = False
+        regEx = input("Enter a regular expression or press \'q\' to exit: ")
+        if regEx == 'q':
+            loop = False
+            end = True
+        else:
+            p = parser.parse(regEx)
+            m = createMapping(p[1])
+            mainNFA = NFA()
+            answer = run(p[1], mainNFA, m)
+            answerNFA = answer[1]
+            answerNFA.removeEpsilon()
+
+            myNFA, i = readInput(regEx, 0, m)
+            myNFA.removeEpsilon()
+            print("Here is the delta array for the Epsilon free NFA: ")
+            print(myNFA.deltaArray)
+
+        while not end:
+            testStr = input("Enter string to test or press \'q\' to enter a new RE: ")
+            if testStr == 'q':
+                end = True
+            else:
+                if testString(myNFA, testStr, m):
+                    print("This string is accepted")
+                else:
+                    print("This string is rejected")
+    return 0
 
 
 def main():
@@ -372,6 +552,8 @@ def main():
             m = createMapping(regEx)
             myNFA, i = readInput(regEx, 0, m)
             myNFA.removeEpsilon()
+            print("Here is the delta array for the Epsilon free NFA:", myNFA.deltaArray)
+            print("Here are the accepting states for said NFA:,", myNFA.accept)
 
         while not end:
             testStr = input("Enter string to test or press \'q\' to enter a new RE: ")
