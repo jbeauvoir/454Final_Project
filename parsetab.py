@@ -6,9 +6,9 @@ _tabversion = '3.10'
 
 _lr_method = 'LALR'
 
-_lr_signature = 'leftUNIONleftKLEENEKLEENE L_PAREN R_PAREN SYMBOL UNION\n    regex : expression \n          | empty\n    \n    expression : expression KLEENE\n    \n    expression : expression expression\n    \n    expression : L_PAREN expression R_PAREN       \n    \n    expression : expression UNION expression\n               \n    \n    expression : SYMBOL\n    \n    empty :\n    '
+_lr_signature = 'leftUNIONleftKLEENEleftSYMBOLleftCONCATENATECONCATENATE KLEENE L_PAREN R_PAREN SYMBOL UNION\n    regex : expression \n          | empty\n    \n    expression : expression KLEENE\n    \n    expression : expression expression\n    \n    expression : L_PAREN expression R_PAREN       \n    \n    expression : expression UNION expression\n               | expression CONCATENATE expression\n    \n    expression : SYMBOL\n    \n    empty :\n    '
     
-_lr_action_items = {'L_PAREN':([0,2,4,5,6,7,8,9,10,11,],[4,4,4,-7,4,-3,4,4,-6,-5,]),'SYMBOL':([0,2,4,5,6,7,8,9,10,11,],[5,5,5,-7,5,-3,5,5,-6,-5,]),'$end':([0,1,2,3,5,6,7,10,11,],[-8,0,-1,-2,-7,-4,-3,-6,-5,]),'KLEENE':([2,5,6,7,9,10,11,],[7,-7,7,-3,7,7,-5,]),'UNION':([2,5,6,7,9,10,11,],[8,-7,8,-3,8,-6,-5,]),'R_PAREN':([5,6,7,9,10,11,],[-7,-4,-3,11,-6,-5,]),}
+_lr_action_items = {'L_PAREN':([0,2,4,5,6,7,8,9,10,11,12,13,],[4,4,4,-8,4,-3,4,4,4,-6,-7,-5,]),'SYMBOL':([0,2,4,5,6,7,8,9,10,11,12,13,],[5,5,5,-8,5,-3,5,5,5,5,-7,-5,]),'$end':([0,1,2,3,5,6,7,11,12,13,],[-9,0,-1,-2,-8,-4,-3,-6,-7,-5,]),'KLEENE':([2,5,6,7,10,11,12,13,],[7,-8,7,-3,7,7,-7,-5,]),'UNION':([2,5,6,7,10,11,12,13,],[8,-8,8,-3,8,-6,-7,-5,]),'CONCATENATE':([2,5,6,7,10,11,12,13,],[9,-8,9,-3,9,9,-7,-5,]),'R_PAREN':([5,6,7,10,11,12,13,],[-8,-4,-3,13,-6,-7,-5,]),}
 
 _lr_action = {}
 for _k, _v in _lr_action_items.items():
@@ -17,7 +17,7 @@ for _k, _v in _lr_action_items.items():
       _lr_action[_x][_k] = _y
 del _lr_action_items
 
-_lr_goto_items = {'regex':([0,],[1,]),'expression':([0,2,4,6,8,9,10,],[2,6,9,6,10,6,6,]),'empty':([0,],[3,]),}
+_lr_goto_items = {'regex':([0,],[1,]),'expression':([0,2,4,6,8,9,10,11,12,],[2,6,10,6,11,12,6,6,6,]),'empty':([0,],[3,]),}
 
 _lr_goto = {}
 for _k, _v in _lr_goto_items.items():
@@ -27,12 +27,13 @@ for _k, _v in _lr_goto_items.items():
 del _lr_goto_items
 _lr_productions = [
   ("S' -> regex","S'",1,None,None,None),
-  ('regex -> expression','regex',1,'p_regex','re2nfa.py',408),
-  ('regex -> empty','regex',1,'p_regex','re2nfa.py',409),
-  ('expression -> expression KLEENE','expression',2,'p_expression_kleene','re2nfa.py',430),
-  ('expression -> expression expression','expression',2,'p_expression_expression','re2nfa.py',436),
-  ('expression -> L_PAREN expression R_PAREN','expression',3,'p_LRparen','re2nfa.py',442),
-  ('expression -> expression UNION expression','expression',3,'p_expression_union_concat','re2nfa.py',448),
-  ('expression -> SYMBOL','expression',1,'p_expression_symbol','re2nfa.py',455),
-  ('empty -> <empty>','empty',0,'p_empty','re2nfa.py',464),
+  ('regex -> expression','regex',1,'p_regex','re2nfa.py',411),
+  ('regex -> empty','regex',1,'p_regex','re2nfa.py',412),
+  ('expression -> expression KLEENE','expression',2,'p_expression_kleene','re2nfa.py',436),
+  ('expression -> expression expression','expression',2,'p_expression_expression','re2nfa.py',442),
+  ('expression -> L_PAREN expression R_PAREN','expression',3,'p_LRparen','re2nfa.py',448),
+  ('expression -> expression UNION expression','expression',3,'p_expression_union_concat','re2nfa.py',454),
+  ('expression -> expression CONCATENATE expression','expression',3,'p_expression_union_concat','re2nfa.py',455),
+  ('expression -> SYMBOL','expression',1,'p_expression_symbol','re2nfa.py',461),
+  ('empty -> <empty>','empty',0,'p_empty','re2nfa.py',470),
 ]

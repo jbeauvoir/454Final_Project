@@ -7,7 +7,6 @@ sys.path
 import ply.lex as lex
 import ply.yacc as yacc
 
-global p
 
 class NFA(object):
     def __init__(self):
@@ -360,7 +359,8 @@ tokens = [
     'L_PAREN',
     'R_PAREN',
     'UNION',
-    'KLEENE'
+    'KLEENE',
+    'CONCATENATE'
 
 ]
 
@@ -372,6 +372,7 @@ t_L_PAREN = r'\('
 t_R_PAREN = r'\)'
 t_KLEENE = r'\*'
 t_UNION = r'\+'
+t_CONCATENATE = r'\.'
 
 t_ignore = r' '
 
@@ -399,7 +400,9 @@ lexer = lex.lex()
 precedence = (
 
     ('left', 'UNION'),
-    ('left', 'KLEENE')
+    ('left', 'KLEENE'),
+    ('left', 'SYMBOL'),
+    ('left', 'CONCATENATE')
 )
 
 
@@ -414,14 +417,19 @@ def p_regex(p):
     answer = run(p[1],mainNFA, m)
     answerNFA = answer[1]
     answerNFA.removeEpsilon()
+    print("Tree: " + str(p[1]))
+    print("NFA: " + str(answerNFA.deltaArray))
+    print()
+
     while True:
         try: 
-            testStr = input('\nEnter a string to test or hit \'command-D\' to enter a new RE\n ')
+            testStr = input('\nEnter a string to test or hit \'command-D\' to enter a new RE.\n>> ')
             if testString(answerNFA, testStr, m):
                 print("This string is accepted")
             else:
                 print("This string is rejected")
         except EOFError:
+            print("\nEnter another regular expression.")
             break
 
     
@@ -446,7 +454,7 @@ def p_LRparen(p):
 def p_expression_union_concat(p):
     '''
     expression : expression UNION expression
-               
+               | expression CONCATENATE expression
     '''
     p[0] = (p[2], p[1], p[3])
 
@@ -471,21 +479,19 @@ def dictCreator(RE):
     # Regular Expression Parser Loop
     m = {}
     for letter in str(RE):
-        if letter not in (' ', '(', ')', '*', '+', '\'', ','):
+        if letter not in (' ', '(', ')', '*', '+', '\'', ',', '.'):
             m[letter] = 0
             count = 0
             for key in m:
                 m[key] = count                
                 count += 1
-    print(m)
+    print("Transitions: " + str(m))
     return m
 
-
-# Call parser (not in a function))
+#Call parser (not in a function))
 parser = yacc.yacc(method="LALR")
 
 
-# nfa creation will occur in the base case
 def run(p, nfa, m):
     
     if type(p) == tuple:
@@ -503,7 +509,15 @@ def run(p, nfa, m):
             stringNFA = inString[1] 
             stringNFA.star()
             return (p, stringNFA, m)
-        # Concatenation
+        # Concatenation A
+        if p[0] == '.':
+            lhs = run(p[1],nfa,m)
+            rhs = run(p[2],nfa,m)
+            lhsNFA = lhs[1]
+            rhsNFA = rhs[1]
+            lhsNFA.concatenate(rhsNFA)
+            return (p, lhsNFA, m)
+        # Concatenation B
         else:
             lhs = run(p[0],nfa,m)
             rhs = run(p[1],nfa,m)

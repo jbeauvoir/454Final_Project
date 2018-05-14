@@ -9,22 +9,24 @@ Rule 3     expression -> expression KLEENE
 Rule 4     expression -> expression expression
 Rule 5     expression -> L_PAREN expression R_PAREN
 Rule 6     expression -> expression UNION expression
-Rule 7     expression -> SYMBOL
-Rule 8     empty -> <empty>
+Rule 7     expression -> expression CONCATENATE expression
+Rule 8     expression -> SYMBOL
+Rule 9     empty -> <empty>
 
 Terminals, with rules where they appear
 
+CONCATENATE          : 7
 KLEENE               : 3
 L_PAREN              : 5
 R_PAREN              : 5
-SYMBOL               : 7
+SYMBOL               : 8
 UNION                : 6
 error                : 
 
 Nonterminals, with rules where they appear
 
 empty                : 2
-expression           : 1 3 4 4 5 6 6
+expression           : 1 3 4 4 5 6 6 7 7
 regex                : 0
 
 Parsing method: LALR
@@ -38,12 +40,13 @@ state 0
     (4) expression -> . expression expression
     (5) expression -> . L_PAREN expression R_PAREN
     (6) expression -> . expression UNION expression
-    (7) expression -> . SYMBOL
-    (8) empty -> .
+    (7) expression -> . expression CONCATENATE expression
+    (8) expression -> . SYMBOL
+    (9) empty -> .
 
     L_PAREN         shift and go to state 4
     SYMBOL          shift and go to state 5
-    $end            reduce using rule 8 (empty -> .)
+    $end            reduce using rule 9 (empty -> .)
 
     regex                          shift and go to state 1
     expression                     shift and go to state 2
@@ -61,15 +64,18 @@ state 2
     (3) expression -> expression . KLEENE
     (4) expression -> expression . expression
     (6) expression -> expression . UNION expression
+    (7) expression -> expression . CONCATENATE expression
     (3) expression -> . expression KLEENE
     (4) expression -> . expression expression
     (5) expression -> . L_PAREN expression R_PAREN
     (6) expression -> . expression UNION expression
-    (7) expression -> . SYMBOL
+    (7) expression -> . expression CONCATENATE expression
+    (8) expression -> . SYMBOL
 
     $end            reduce using rule 1 (regex -> expression .)
     KLEENE          shift and go to state 7
     UNION           shift and go to state 8
+    CONCATENATE     shift and go to state 9
     L_PAREN         shift and go to state 4
     SYMBOL          shift and go to state 5
 
@@ -89,23 +95,25 @@ state 4
     (4) expression -> . expression expression
     (5) expression -> . L_PAREN expression R_PAREN
     (6) expression -> . expression UNION expression
-    (7) expression -> . SYMBOL
+    (7) expression -> . expression CONCATENATE expression
+    (8) expression -> . SYMBOL
 
     L_PAREN         shift and go to state 4
     SYMBOL          shift and go to state 5
 
-    expression                     shift and go to state 9
+    expression                     shift and go to state 10
 
 state 5
 
-    (7) expression -> SYMBOL .
+    (8) expression -> SYMBOL .
 
-    KLEENE          reduce using rule 7 (expression -> SYMBOL .)
-    UNION           reduce using rule 7 (expression -> SYMBOL .)
-    L_PAREN         reduce using rule 7 (expression -> SYMBOL .)
-    SYMBOL          reduce using rule 7 (expression -> SYMBOL .)
-    $end            reduce using rule 7 (expression -> SYMBOL .)
-    R_PAREN         reduce using rule 7 (expression -> SYMBOL .)
+    KLEENE          reduce using rule 8 (expression -> SYMBOL .)
+    UNION           reduce using rule 8 (expression -> SYMBOL .)
+    CONCATENATE     reduce using rule 8 (expression -> SYMBOL .)
+    L_PAREN         reduce using rule 8 (expression -> SYMBOL .)
+    SYMBOL          reduce using rule 8 (expression -> SYMBOL .)
+    $end            reduce using rule 8 (expression -> SYMBOL .)
+    R_PAREN         reduce using rule 8 (expression -> SYMBOL .)
 
 
 state 6
@@ -114,25 +122,30 @@ state 6
     (3) expression -> expression . KLEENE
     (4) expression -> expression . expression
     (6) expression -> expression . UNION expression
+    (7) expression -> expression . CONCATENATE expression
     (3) expression -> . expression KLEENE
     (4) expression -> . expression expression
     (5) expression -> . L_PAREN expression R_PAREN
     (6) expression -> . expression UNION expression
-    (7) expression -> . SYMBOL
+    (7) expression -> . expression CONCATENATE expression
+    (8) expression -> . SYMBOL
 
   ! shift/reduce conflict for KLEENE resolved as shift
   ! shift/reduce conflict for UNION resolved as shift
+  ! shift/reduce conflict for CONCATENATE resolved as shift
   ! shift/reduce conflict for L_PAREN resolved as shift
   ! shift/reduce conflict for SYMBOL resolved as shift
     $end            reduce using rule 4 (expression -> expression expression .)
     R_PAREN         reduce using rule 4 (expression -> expression expression .)
     KLEENE          shift and go to state 7
     UNION           shift and go to state 8
+    CONCATENATE     shift and go to state 9
     L_PAREN         shift and go to state 4
     SYMBOL          shift and go to state 5
 
   ! KLEENE          [ reduce using rule 4 (expression -> expression expression .) ]
   ! UNION           [ reduce using rule 4 (expression -> expression expression .) ]
+  ! CONCATENATE     [ reduce using rule 4 (expression -> expression expression .) ]
   ! L_PAREN         [ reduce using rule 4 (expression -> expression expression .) ]
   ! SYMBOL          [ reduce using rule 4 (expression -> expression expression .) ]
 
@@ -144,6 +157,7 @@ state 7
 
     KLEENE          reduce using rule 3 (expression -> expression KLEENE .)
     UNION           reduce using rule 3 (expression -> expression KLEENE .)
+    CONCATENATE     reduce using rule 3 (expression -> expression KLEENE .)
     L_PAREN         reduce using rule 3 (expression -> expression KLEENE .)
     SYMBOL          reduce using rule 3 (expression -> expression KLEENE .)
     $end            reduce using rule 3 (expression -> expression KLEENE .)
@@ -157,65 +171,119 @@ state 8
     (4) expression -> . expression expression
     (5) expression -> . L_PAREN expression R_PAREN
     (6) expression -> . expression UNION expression
-    (7) expression -> . SYMBOL
+    (7) expression -> . expression CONCATENATE expression
+    (8) expression -> . SYMBOL
 
     L_PAREN         shift and go to state 4
     SYMBOL          shift and go to state 5
 
-    expression                     shift and go to state 10
+    expression                     shift and go to state 11
 
 state 9
+
+    (7) expression -> expression CONCATENATE . expression
+    (3) expression -> . expression KLEENE
+    (4) expression -> . expression expression
+    (5) expression -> . L_PAREN expression R_PAREN
+    (6) expression -> . expression UNION expression
+    (7) expression -> . expression CONCATENATE expression
+    (8) expression -> . SYMBOL
+
+    L_PAREN         shift and go to state 4
+    SYMBOL          shift and go to state 5
+
+    expression                     shift and go to state 12
+
+state 10
 
     (5) expression -> L_PAREN expression . R_PAREN
     (3) expression -> expression . KLEENE
     (4) expression -> expression . expression
     (6) expression -> expression . UNION expression
+    (7) expression -> expression . CONCATENATE expression
     (3) expression -> . expression KLEENE
     (4) expression -> . expression expression
     (5) expression -> . L_PAREN expression R_PAREN
     (6) expression -> . expression UNION expression
-    (7) expression -> . SYMBOL
+    (7) expression -> . expression CONCATENATE expression
+    (8) expression -> . SYMBOL
 
-    R_PAREN         shift and go to state 11
+    R_PAREN         shift and go to state 13
     KLEENE          shift and go to state 7
     UNION           shift and go to state 8
+    CONCATENATE     shift and go to state 9
     L_PAREN         shift and go to state 4
     SYMBOL          shift and go to state 5
 
     expression                     shift and go to state 6
 
-state 10
+state 11
 
     (6) expression -> expression UNION expression .
     (3) expression -> expression . KLEENE
     (4) expression -> expression . expression
     (6) expression -> expression . UNION expression
+    (7) expression -> expression . CONCATENATE expression
     (3) expression -> . expression KLEENE
     (4) expression -> . expression expression
     (5) expression -> . L_PAREN expression R_PAREN
     (6) expression -> . expression UNION expression
-    (7) expression -> . SYMBOL
+    (7) expression -> . expression CONCATENATE expression
+    (8) expression -> . SYMBOL
 
     UNION           reduce using rule 6 (expression -> expression UNION expression .)
     L_PAREN         reduce using rule 6 (expression -> expression UNION expression .)
-    SYMBOL          reduce using rule 6 (expression -> expression UNION expression .)
     $end            reduce using rule 6 (expression -> expression UNION expression .)
     R_PAREN         reduce using rule 6 (expression -> expression UNION expression .)
     KLEENE          shift and go to state 7
+    CONCATENATE     shift and go to state 9
+    SYMBOL          shift and go to state 5
 
   ! KLEENE          [ reduce using rule 6 (expression -> expression UNION expression .) ]
+  ! CONCATENATE     [ reduce using rule 6 (expression -> expression UNION expression .) ]
+  ! SYMBOL          [ reduce using rule 6 (expression -> expression UNION expression .) ]
   ! UNION           [ shift and go to state 8 ]
+  ! L_PAREN         [ shift and go to state 4 ]
+
+    expression                     shift and go to state 6
+
+state 12
+
+    (7) expression -> expression CONCATENATE expression .
+    (3) expression -> expression . KLEENE
+    (4) expression -> expression . expression
+    (6) expression -> expression . UNION expression
+    (7) expression -> expression . CONCATENATE expression
+    (3) expression -> . expression KLEENE
+    (4) expression -> . expression expression
+    (5) expression -> . L_PAREN expression R_PAREN
+    (6) expression -> . expression UNION expression
+    (7) expression -> . expression CONCATENATE expression
+    (8) expression -> . SYMBOL
+
+    KLEENE          reduce using rule 7 (expression -> expression CONCATENATE expression .)
+    UNION           reduce using rule 7 (expression -> expression CONCATENATE expression .)
+    CONCATENATE     reduce using rule 7 (expression -> expression CONCATENATE expression .)
+    L_PAREN         reduce using rule 7 (expression -> expression CONCATENATE expression .)
+    SYMBOL          reduce using rule 7 (expression -> expression CONCATENATE expression .)
+    $end            reduce using rule 7 (expression -> expression CONCATENATE expression .)
+    R_PAREN         reduce using rule 7 (expression -> expression CONCATENATE expression .)
+
+  ! KLEENE          [ shift and go to state 7 ]
+  ! UNION           [ shift and go to state 8 ]
+  ! CONCATENATE     [ shift and go to state 9 ]
   ! L_PAREN         [ shift and go to state 4 ]
   ! SYMBOL          [ shift and go to state 5 ]
 
     expression                     shift and go to state 6
 
-state 11
+state 13
 
     (5) expression -> L_PAREN expression R_PAREN .
 
     KLEENE          reduce using rule 5 (expression -> L_PAREN expression R_PAREN .)
     UNION           reduce using rule 5 (expression -> L_PAREN expression R_PAREN .)
+    CONCATENATE     reduce using rule 5 (expression -> L_PAREN expression R_PAREN .)
     L_PAREN         reduce using rule 5 (expression -> L_PAREN expression R_PAREN .)
     SYMBOL          reduce using rule 5 (expression -> L_PAREN expression R_PAREN .)
     $end            reduce using rule 5 (expression -> L_PAREN expression R_PAREN .)
@@ -226,5 +294,6 @@ WARNING: Conflicts:
 WARNING: 
 WARNING: shift/reduce conflict for KLEENE in state 6 resolved as shift
 WARNING: shift/reduce conflict for UNION in state 6 resolved as shift
+WARNING: shift/reduce conflict for CONCATENATE in state 6 resolved as shift
 WARNING: shift/reduce conflict for L_PAREN in state 6 resolved as shift
 WARNING: shift/reduce conflict for SYMBOL in state 6 resolved as shift
