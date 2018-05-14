@@ -2,7 +2,7 @@ import sys
 sys.path
 import ply.lex as lex
 import ply.yacc as yacc
-from collections import OrderedDict
+
 
 class NFA(object):
     def __init__(self):
@@ -260,18 +260,10 @@ def dictCreator(RE):
     for letter in str(RE):
         if letter not in (' ', '(', ')', '*', '+', '\'', ','):
             transitionDict[letter] = 0
-            # Regular order was not supported so I imported a library
-            # and casted it to a diciotnary type.
-            
-            #transitionDict = dict(OrderedDict(sorted(transitionDict.items())))
-
-            # In order to iterate through the dictionary and change values
-            # a new copy must be made.
             transitionFinal = {}
             count = 0
             for key in transitionDict:
                 transitionFinal[key] = count                
-                #print(key, count)
                 count += 1
             m = transitionFinal
     print(m)
